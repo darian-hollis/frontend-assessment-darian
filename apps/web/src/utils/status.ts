@@ -1,14 +1,10 @@
 import { TransactionStatus } from "../models/transaction"
 
-export const statusTagColor = (status: TransactionStatus): string => {
-  switch (status) {
-    case TransactionStatus.APPROVED:
-      return "success"
-    case TransactionStatus.DECLINED:
-      return "error"
-    case TransactionStatus.PENDING:
-      return "warning"
-    case TransactionStatus.REFUNDED:
-      return "default"
-  }
+const STATUS_COLORS: Record<TransactionStatus, string> = {
+  [TransactionStatus.APPROVED]: "success",
+  [TransactionStatus.DECLINED]: "error",
+  [TransactionStatus.PENDING]: "warning",
+  [TransactionStatus.REFUNDED]: "default",
 }
+
+export const statusTagColor = (status: TransactionStatus): string => STATUS_COLORS[status] ?? "default"
