@@ -2,14 +2,15 @@ import express from "express"
 import type { NextFunction, Request, Response } from "express"
 import cors from "cors"
 
-import { PORT } from "./config.js"
+import { CORS_ORIGIN, PORT } from "./config.js"
 import { createTransactionService } from "./services/transaction-service.js"
 import { parseListQuery, parseNewTransaction } from "./utils/validation.js"
 
 const app = express()
 
-app.use(cors({ origin: "*", credentials: true }))
-app.use(express.json())
+app.disable("x-powered-by")
+app.use(cors({ origin: CORS_ORIGIN }))
+app.use(express.json({ limit: "10kb" }))
 
 const transactionService = createTransactionService()
 
@@ -41,10 +42,13 @@ app.get("/api/transactions/:id", (req: Request, res: Response) => {
   res.json(transaction)
 })
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error & { status?: number }, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) return next(err)
+  if (err.status && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ error: "Bad request" })
+  }
   console.error(err)
-  res.status(500).json({ error: err.message, stack: err.stack })
+  res.status(500).json({ error: "Something went wrong" })
 })
 
 app.listen(PORT, () => {
