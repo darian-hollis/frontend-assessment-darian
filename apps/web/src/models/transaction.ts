@@ -23,3 +23,17 @@ export interface Transaction {
   status: TransactionStatus
   createdAt: string
 }
+
+export interface TransactionSummary {
+  approvedCount: number
+  totalProcessed: number
+}
+
+export interface TransactionPage {
+  items: Transaction[]
+  page: number
+  pageSize: number
+  q: string
+  total: number
+  summary: TransactionSummary
+}

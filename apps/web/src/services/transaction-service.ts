@@ -1,11 +1,25 @@
-import type { CardBrand, Transaction } from "../models/transaction"
+import type { CardBrand, Transaction, TransactionPage } from "../models/transaction"
 
 const API_BASE = "/api"
 
-export const fetchTransactions = async (): Promise<Transaction[]> => {
-  const rsp = await fetch(`${API_BASE}/transactions`)
-  const data = await rsp.json()
-  return data.transactions
+export interface TransactionQuery {
+  page: number
+  pageSize: number
+  q: string
+}
+
+export const fetchTransactions = async (
+  { page, pageSize, q }: TransactionQuery,
+  signal?: AbortSignal
+): Promise<TransactionPage> => {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (q) params.set("q", q)
+
+  const rsp = await fetch(`${API_BASE}/transactions?${params}`, { signal })
+  if (!rsp.ok) {
+    throw new Error(`Failed to load transactions (${rsp.status})`)
+  }
+  return rsp.json()
 }
 
 export interface NewTransactionInput {

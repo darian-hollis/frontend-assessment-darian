@@ -1,5 +1,3 @@
-import type { Transaction } from "../models/transaction"
-
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 const percent = new Intl.NumberFormat("en-US", { style: "percent", minimumFractionDigits: 1 })
 
@@ -25,11 +23,3 @@ export const formatDateTime = (iso: string): string => {
 }
 
 export const formatPercent = (rate: number): string => percent.format(rate)
-
-export const computeTotal = (transactions: Transaction[]): number => {
-  let total = 0
-  for (const t of transactions) {
-    total += t.amount
-  }
-  return total
-}

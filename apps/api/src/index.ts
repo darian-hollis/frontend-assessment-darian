@@ -4,6 +4,7 @@ import cors from "cors"
 
 import { PORT } from "./config.js"
 import { createTransactionService } from "./services/transaction-service.js"
+import { parseListQuery } from "./utils/validation.js"
 
 const app = express()
 
@@ -17,13 +18,11 @@ app.get("/api/health", (_req: Request, res: Response) => {
 })
 
 app.get("/api/transactions", (req: Request, res: Response) => {
-  console.log("GET /api/transactions", req.query)
-  const transactions = transactionService.getAll()
-  res.json({ transactions })
-})
-
-app.get("/api/transactions/summary", (_req: Request, res: Response) => {
-  res.json(transactionService.getSummary())
+  const query = parseListQuery(req.query)
+  if (!query.ok) {
+    return res.status(400).json({ error: query.error })
+  }
+  res.json(transactionService.list(query.value))
 })
 
 app.post("/api/transactions", (req: Request, res: Response) => {
@@ -47,5 +46,5 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT} (${transactionService.getAll().length} transactions)`)
+  console.log(`API listening on http://localhost:${PORT} (${transactionService.count()} transactions)`)
 })

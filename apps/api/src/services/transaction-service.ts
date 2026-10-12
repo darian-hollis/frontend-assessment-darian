@@ -1,13 +1,12 @@
-import _ from "lodash"
-
 import { TransactionStatus } from "../models/transaction.js"
 import type { CardBrand, Transaction } from "../models/transaction.js"
 import { loadTransactions } from "../data/transactions.js"
+import { fromCents, toCents } from "../utils/money.js"
+import type { ListQuery } from "../utils/validation.js"
 
 export interface TransactionSummary {
-  count: number
-  totalVolume: number
-  totalSurcharge: number
+  approvedCount: number
+  totalProcessed: number
 }
 
 export interface NewTransactionInput {
@@ -16,18 +15,55 @@ export interface NewTransactionInput {
   amount: number
 }
 
-export const createTransactionService = () => {
-  const transactions = loadTransactions()
+export interface TransactionPage {
+  items: Transaction[]
+  page: number
+  pageSize: number
+  q: string
+  total: number
+  summary: TransactionSummary
+}
 
-  const getAll = (): Transaction[] => transactions
+// Only approved transactions count as processed
+export const summarize = (rows: Transaction[]): TransactionSummary => {
+  let approvedCount = 0
+  let totalCents = 0
+  for (const t of rows) {
+    if (t.status !== TransactionStatus.APPROVED) continue
+    approvedCount++
+    totalCents += toCents(t.total)
+  }
 
-  const getById = (id: string): Transaction | undefined => transactions.find((t) => t.id === id)
+  return { approvedCount, totalProcessed: fromCents(totalCents) }
+}
 
-  const getSummary = (): TransactionSummary => ({
-    count: transactions.length,
-    totalVolume: _.round(_.sumBy(transactions, "amount"), 2),
-    totalSurcharge: _.round(_.sumBy(transactions, "surcharge"), 2),
-  })
+// Newline-joined so a search term can't match across two fields
+const toSearchText = (t: Transaction): string =>
+  [t.id, t.merchantName, t.cardBrand, t.status].join("\n").toLowerCase()
+
+export const createTransactionService = (seed: Transaction[] = loadTransactions()) => {
+  const transactions = [...seed]
+  const byId = new Map(transactions.map((t) => [t.id, t]))
+  const searchText = new WeakMap(transactions.map((t) => [t, toSearchText(t)]))
+
+  const count = (): number => transactions.length
+
+  const getById = (id: string): Transaction | undefined => byId.get(id)
+
+  const list = ({ page, pageSize, q }: ListQuery): TransactionPage => {
+    const term = q.toLowerCase()
+    const matches = term ? transactions.filter((t) => searchText.get(t)?.includes(term)) : transactions
+    const start = (page - 1) * pageSize
+
+    return {
+      items: matches.slice(start, start + pageSize),
+      page,
+      pageSize,
+      q,
+      total: matches.length,
+      summary: summarize(matches),
+    }
+  }
 
   const create = (input: NewTransactionInput): Transaction => {
     const transaction: Transaction = {
@@ -42,10 +78,12 @@ export const createTransactionService = () => {
       createdAt: new Date().toISOString(),
     }
     transactions.unshift(transaction)
+    byId.set(transaction.id, transaction)
+    searchText.set(transaction, toSearchText(transaction))
     return transaction
   }
 
-  return { getAll, getById, getSummary, create }
+  return { count, getById, list, create }
 }
 
 export type TransactionService = ReturnType<typeof createTransactionService>

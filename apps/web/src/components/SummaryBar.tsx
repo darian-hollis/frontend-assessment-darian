@@ -1,19 +1,35 @@
 import { Statistic } from "antd"
 
-import type { Transaction } from "../models/transaction"
-import { computeTotal } from "../utils/format"
+import type { TransactionSummary } from "../models/transaction"
 
 interface SummaryBarProps {
-  transactions: Transaction[]
+  total: number
+  summary: TransactionSummary
+  search?: string
 }
 
-export const SummaryBar = ({ transactions }: SummaryBarProps) => {
-  const total = computeTotal(transactions)
-
+export const SummaryBar = ({ total, summary, search }: SummaryBarProps) => {
   return (
     <div className="summary-bar">
-      <Statistic title="Transactions" value={transactions.length} />
-      <Statistic title="Total processed" value={total} precision={2} prefix="$" />
+      <Statistic
+        title={
+          <>
+            Transactions {search && <span className="muted">matching &ldquo;{search}&rdquo;</span>}
+          </>
+        }
+        value={total}
+      />
+      <Statistic title="Approved" value={summary.approvedCount} />
+      <Statistic
+        title={
+          <>
+            Total processed <span className="muted">(approved, incl. surcharge)</span>
+          </>
+        }
+        value={summary.totalProcessed}
+        precision={2}
+        prefix="$"
+      />
     </div>
   )
 }
