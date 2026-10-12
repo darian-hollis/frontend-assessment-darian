@@ -88,3 +88,41 @@ describe("list", () => {
     expect(result.summary).toEqual({ approvedCount: 12, totalProcessed: 1236 })
   })
 })
+
+describe("create", () => {
+  it("derives surcharge and total in cents and starts as pending", () => {
+    const service = createTransactionService([makeTransaction({})])
+    const created = service.create({ merchantName: "Quail Run Winery", cardBrand: CardBrand.AMEX, amountCents: 161673 })
+
+    expect(created).toMatchObject({
+      id: "txn_000002",
+      merchantName: "Quail Run Winery",
+      cardBrand: CardBrand.AMEX,
+      amount: 1616.73,
+      surchargeRate: 0.03,
+      surcharge: 48.5,
+      total: 1665.23,
+      status: TransactionStatus.PENDING,
+    })
+    expect(service.getById("txn_000002")).toBe(created)
+    expect(service.list({ page: 1, pageSize: 1, q: "" }).items[0]).toBe(created)
+    expect(service.list({ page: 1, pageSize: 20, q: "quail run" }).items).toEqual([created])
+  })
+
+  it("doesn't change the processed total because it's pending", () => {
+    const service = createTransactionService([makeTransaction({ total: 103 })])
+    service.create({ merchantName: "Quail Run Winery", cardBrand: CardBrand.VISA, amountCents: 5000 })
+
+    expect(service.list({ page: 1, pageSize: 20, q: "" })).toMatchObject({
+      total: 2,
+      summary: { approvedCount: 1, totalProcessed: 103 },
+    })
+  })
+
+  it("doesn't mutate the seed array it was given", () => {
+    const seed = [makeTransaction({})]
+    createTransactionService(seed).create({ merchantName: "X", cardBrand: CardBrand.VISA, amountCents: 100 })
+
+    expect(seed).toHaveLength(1)
+  })
+})

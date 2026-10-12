@@ -1,18 +1,15 @@
 import { TransactionStatus } from "../models/transaction.js"
-import type { CardBrand, Transaction } from "../models/transaction.js"
+import type { Transaction } from "../models/transaction.js"
 import { loadTransactions } from "../data/transactions.js"
-import { fromCents, toCents } from "../utils/money.js"
-import type { ListQuery } from "../utils/validation.js"
+import { fromCents, percentOfCents, toCents } from "../utils/money.js"
+import type { ListQuery, NewTransactionInput } from "../utils/validation.js"
+
+// Assumption: seed rates vary (2.5-3.5%) with no rule, so new transactions use a flat 3%
+const SURCHARGE_RATE_BPS = 300
 
 export interface TransactionSummary {
   approvedCount: number
   totalProcessed: number
-}
-
-export interface NewTransactionInput {
-  merchantName: string
-  cardBrand: CardBrand
-  amount: number
 }
 
 export interface TransactionPage {
@@ -65,16 +62,17 @@ export const createTransactionService = (seed: Transaction[] = loadTransactions(
     }
   }
 
-  const create = (input: NewTransactionInput): Transaction => {
+  const create = ({ merchantName, cardBrand, amountCents }: NewTransactionInput): Transaction => {
+    const surchargeCents = percentOfCents(amountCents, SURCHARGE_RATE_BPS)
     const transaction: Transaction = {
       id: `txn_${String(transactions.length + 1).padStart(6, "0")}`,
-      merchantName: input.merchantName,
-      cardBrand: input.cardBrand,
-      amount: input.amount,
-      surchargeRate: 0,
-      surcharge: 0,
-      total: input.amount,
-      status: TransactionStatus.APPROVED,
+      merchantName,
+      cardBrand,
+      amount: fromCents(amountCents),
+      surchargeRate: SURCHARGE_RATE_BPS / 10_000,
+      surcharge: fromCents(surchargeCents),
+      total: fromCents(amountCents + surchargeCents),
+      status: TransactionStatus.PENDING,
       createdAt: new Date().toISOString(),
     }
     transactions.unshift(transaction)

@@ -1,5 +1,5 @@
 import { Button } from "antd"
-import { Link, Route, Routes, useNavigate } from "react-router-dom"
+import { Link, Route, Routes, useLocation, useMatch, useNavigate } from "react-router-dom"
 
 import { NewTransactionPage } from "./pages/NewTransactionPage"
 import { TransactionDetailPage } from "./pages/TransactionDetailPage"
@@ -7,6 +7,8 @@ import { TransactionsPage } from "./pages/TransactionsPage"
 
 const App = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const onNewTransactionPage = useMatch("/transactions/new") !== null
 
   return (
     <div className="app">
@@ -14,9 +16,14 @@ const App = () => {
         <Link to="/" className="brand">
           Payment Portal
         </Link>
-        <Button type="primary" onClick={() => navigate("/transactions/new")}>
-          New transaction
-        </Button>
+        {!onNewTransactionPage && (
+          <Button
+            type="primary"
+            onClick={() => navigate("/transactions/new", { state: { from: location.pathname + location.search } })}
+          >
+            New transaction
+          </Button>
+        )}
       </nav>
 
       <Routes>
