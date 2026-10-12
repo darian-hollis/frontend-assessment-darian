@@ -22,3 +22,12 @@ export const createTransaction = async (input: NewTransactionInput): Promise<Tra
   })
   return rsp.json()
 }
+
+export const fetchTransaction = async (id: string, signal?: AbortSignal): Promise<Transaction | null> => {
+  const rsp = await fetch(`${API_BASE}/transactions/${encodeURIComponent(id)}`, { signal })
+  if (rsp.status === 404) return null
+  if (!rsp.ok) {
+    throw new Error(`Failed to load transaction (${rsp.status})`)
+  }
+  return rsp.json()
+}
