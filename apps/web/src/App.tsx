@@ -30,6 +30,18 @@ const App = () => {
         <Route path="/" element={<TransactionsPage />} />
         <Route path="/transactions/new" element={<NewTransactionPage />} />
         <Route path="/transactions/:id" element={<TransactionDetailPage />} />
+        <Route
+          path="*"
+          element={
+            <div className="not-found">
+              <h1>Page not found</h1>
+              <p>The page you're looking for doesn't exist.</p>
+              <Button type="primary" onClick={() => navigate("/")}>
+                Back to home
+              </Button>
+            </div>
+          }
+        />
       </Routes>
     </div>
   )

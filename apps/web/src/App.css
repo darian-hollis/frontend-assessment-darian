@@ -118,6 +118,21 @@ body {
   font-size: 12px;
 }
 
+.not-found {
+  text-align: center;
+  padding-top: 96px;
+}
+
+.not-found h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.not-found p {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
