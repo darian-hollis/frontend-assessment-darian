@@ -2,13 +2,15 @@ import express from "express"
 import type { NextFunction, Request, Response } from "express"
 import cors from "cors"
 
-import { PORT } from "./config.js"
+import { CORS_ORIGIN, PORT } from "./config.js"
 import { createTransactionService } from "./services/transaction-service.js"
+import { parseListQuery, parseNewTransaction } from "./utils/validation.js"
 
 const app = express()
 
-app.use(cors({ origin: "*", credentials: true }))
-app.use(express.json())
+app.disable("x-powered-by")
+app.use(cors({ origin: CORS_ORIGIN }))
+app.use(express.json({ limit: "10kb" }))
 
 const transactionService = createTransactionService()
 
@@ -17,19 +19,19 @@ app.get("/api/health", (_req: Request, res: Response) => {
 })
 
 app.get("/api/transactions", (req: Request, res: Response) => {
-  console.log("GET /api/transactions", req.query)
-  const transactions = transactionService.getAll()
-  res.json({ transactions })
-})
-
-app.get("/api/transactions/summary", (_req: Request, res: Response) => {
-  res.json(transactionService.getSummary())
+  const query = parseListQuery(req.query)
+  if (!query.ok) {
+    return res.status(400).json({ error: query.error })
+  }
+  res.json(transactionService.list(query.value))
 })
 
 app.post("/api/transactions", (req: Request, res: Response) => {
-  const { merchantName, cardBrand, amount } = req.body
-  const transaction = transactionService.create({ merchantName, cardBrand, amount })
-  res.status(201).json(transaction)
+  const input = parseNewTransaction(req.body)
+  if (!input.ok) {
+    return res.status(400).json({ error: "Invalid transaction", fields: input.error })
+  }
+  res.status(201).json(transactionService.create(input.value))
 })
 
 app.get("/api/transactions/:id", (req: Request, res: Response) => {
@@ -40,12 +42,15 @@ app.get("/api/transactions/:id", (req: Request, res: Response) => {
   res.json(transaction)
 })
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error & { status?: number }, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) return next(err)
+  if (err.status && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ error: "Bad request" })
+  }
   console.error(err)
-  res.status(500).json({ error: err.message, stack: err.stack })
+  res.status(500).json({ error: "Something went wrong" })
 })
 
 app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT} (${transactionService.getAll().length} transactions)`)
+  console.log(`API listening on http://localhost:${PORT} (${transactionService.count()} transactions)`)
 })

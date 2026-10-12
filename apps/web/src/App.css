@@ -22,14 +22,9 @@ body {
   padding: 24px;
 }
 
-.app-loading {
-  display: flex;
-  justify-content: center;
-  padding-top: 96px;
-}
-
 .app-nav {
   display: flex;
+  min-height: 48px;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
@@ -45,15 +40,25 @@ body {
 }
 
 .new-transaction {
-  max-width: 480px;
+  max-width: 520px;
+  margin: 24px auto 0;
 }
 
-.new-transaction h2 {
-  margin-top: 0;
+.card-title {
+  margin: 0 0 4px;
+  font-size: 20px;
 }
 
-.form-field {
-  margin-bottom: 12px;
+.card-subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .app-header {
@@ -79,40 +84,68 @@ body {
   margin-bottom: 16px;
 }
 
-.transaction-list {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.transaction-row {
-  display: grid;
-  grid-template-columns: 1.2fr 1.6fr 1fr 1fr 1fr 1fr 1.1fr 1fr;
-  gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 14px;
-  align-items: center;
+.clickable-row {
   cursor: pointer;
 }
 
-.transaction-row:hover {
-  background: #f2f6ff;
+.page-alert {
+  margin-bottom: 16px;
 }
 
-.transaction-header {
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.transaction-detail {
+  max-width: 720px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #1677ff;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.detail-title {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 18px;
+}
+
+.muted {
   color: var(--muted);
-  background: #fafbfc;
-  cursor: default;
+  font-size: 12px;
 }
 
-.transaction-header:hover {
-  background: #fafbfc;
+.not-found {
+  text-align: center;
+  padding-top: 96px;
+}
+
+.not-found h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.not-found p {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.result-title {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .mono {
